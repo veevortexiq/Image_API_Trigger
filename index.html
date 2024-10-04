@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GET Request with Long Polling</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        h1 {
+            margin-bottom: 20px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #timestamp, #data, #loading {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #555;
+        }
+        #loading {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Trigger Workflow</h1>
+    <button id="getRequestBtn">Trigger</button>
+    <div id="loading">Workflow executing...</div>
+    <div id="timestamp"></div>
+    <div id="data"></div>
+    <script>
+        function longPoll() {
+            fetch('http://localhost:5678/long-poll-endpoint')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Long Poll Data:', data);
+                    const finishTime = new Date().toLocaleString();
+                    document.getElementById('data').textContent = 'Workflow finished at: ' + finishTime; // Display finish time
+                    document.getElementById('loading').style.display = 'none'; // Hide loading screen on data receive
+                })
+                .catch(error => {
+                    console.error('Long Poll Error:', error);
+                    setTimeout(longPoll, 5000); // Retry after delay on error
+                });
+        }
+
+        document.getElementById('getRequestBtn').addEventListener('click', function() {
+            const startTime = new Date().toLocaleString();
+            document.getElementById('timestamp').textContent = 'Workflow started at: ' + startTime;
+            document.getElementById('loading').style.display = 'block'; // Show loading screen
+
+            fetch('http://localhost:5678/webhook-test/e79d73aa-1f83-435b-930e-76f5ab08c6a8')
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data);
+                    const finishTime = new Date().toLocaleString();
+                    document.getElementById('data').textContent = 'Workflow finished at: ' + finishTime; // Display finish time
+                    document.getElementById('loading').style.display = 'none'; // Hide loading screen
+                })
+                .catch(error => console.error('Error:', error));
+
+            longPoll(); // Start long polling
+        });
+    </script>
+</body>
+</html>
